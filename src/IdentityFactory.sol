@@ -1,4 +1,19 @@
+// SPDX-FileCopyrightText: © 2026 Dai Foundation <www.daifoundation.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 pragma solidity ^0.8.24;
 
 import { IdentitySubnet }  from "src/IdentitySubnet.sol";
@@ -7,25 +22,41 @@ import { IdentityNetwork } from "src/IdentityNetwork.sol";
 contract IdentityFactory {
 
     // --- Events ---
-    event CreateSubnet(address indexed subnet, address indexed admin);
-    event CreateNetwork(address indexed network, address indexed admin);
+    event CreateSubnet(address indexed subnet, address indexed admin, address[] buds, address[] members);
+    event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] subnets);
 
     // --- Factory ---
-    function createSubnet(address admin, address[] calldata members) external returns (address subnet) {
+    function createSubnet(address admin, address[] calldata buds, address[] calldata members) external returns (address subnet) {
         IdentitySubnet s = new IdentitySubnet();
-        if (members.length > 0) s.addMemberBatch(members);
+        for (uint256 i; i < buds.length;) {
+            s.kiss(buds[i]);
+            unchecked { ++i; }
+        }
+        if (members.length > 0) {
+            s.kiss(address(this));
+            s.addMemberBatch(members);
+            s.diss(address(this));
+        }
         s.rely(admin);
         s.deny(address(this));
         subnet = address(s);
-        emit CreateSubnet(subnet, admin);
+        emit CreateSubnet(subnet, admin, buds, members);
     }
 
-    function createNetwork(address admin, address[] calldata subnets) external returns (address network) {
+    function createNetwork(address admin, address[] calldata buds, address[] calldata subnets) external returns (address network) {
         IdentityNetwork n = new IdentityNetwork();
-        if (subnets.length > 0) n.addSubnetBatch(subnets);
+        for (uint256 i; i < buds.length;) {
+            n.kiss(buds[i]);
+            unchecked { ++i; }
+        }
+        if (subnets.length > 0) {
+            n.kiss(address(this));
+            n.addSubnetBatch(subnets);
+            n.diss(address(this));
+        }
         n.rely(admin);
         n.deny(address(this));
         network = address(n);
-        emit CreateNetwork(network, admin);
+        emit CreateNetwork(network, admin, buds, subnets);
     }
 }

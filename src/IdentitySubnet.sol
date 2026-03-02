@@ -1,4 +1,19 @@
+// SPDX-FileCopyrightText: © 2026 Dai Foundation <www.daifoundation.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 pragma solidity ^0.8.24;
 
 import { EnumerableSet } from "openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
@@ -9,10 +24,17 @@ contract IdentitySubnet is IIdentityNetwork {
 
     // --- Auth ---
     mapping(address usr => uint256 allowed) public wards;
+    mapping(address usr => uint256 allowed) public buds;
     function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
     function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
+    function kiss(address usr) external auth { buds[usr] = 1; emit Kiss(usr); }
+    function diss(address usr) external auth { buds[usr] = 0; emit Diss(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "IdentitySubnet/not-authorized");
+        _;
+    }
+    modifier toll {
+        require(buds[msg.sender] == 1, "IdentitySubnet/not-authorized");
         _;
     }
 
@@ -22,6 +44,8 @@ contract IdentitySubnet is IIdentityNetwork {
     // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
+    event Kiss(address indexed usr);
+    event Diss(address indexed usr);
     event AddMember(address indexed usr);
     event RemoveMember(address indexed usr);
 
@@ -32,17 +56,17 @@ contract IdentitySubnet is IIdentityNetwork {
     }
 
     // --- Member Management ---
-    function addMember(address usr) external auth {
+    function addMember(address usr) external toll {
         _members.add(usr);
         emit AddMember(usr);
     }
 
-    function removeMember(address usr) external auth {
+    function removeMember(address usr) external toll {
         _members.remove(usr);
         emit RemoveMember(usr);
     }
 
-    function addMemberBatch(address[] calldata usrs) external auth {
+    function addMemberBatch(address[] calldata usrs) external toll {
         for (uint256 i; i < usrs.length;) {
             _members.add(usrs[i]);
             emit AddMember(usrs[i]);
@@ -50,7 +74,7 @@ contract IdentitySubnet is IIdentityNetwork {
         }
     }
 
-    function removeMemberBatch(address[] calldata usrs) external auth {
+    function removeMemberBatch(address[] calldata usrs) external toll {
         for (uint256 i; i < usrs.length;) {
             _members.remove(usrs[i]);
             emit RemoveMember(usrs[i]);
@@ -59,8 +83,8 @@ contract IdentitySubnet is IIdentityNetwork {
     }
 
     // --- Query ---
-    function isMember(address usr) external view returns (uint256) {
-        return _members.contains(usr) ? 1 : 0;
+    function isMember(address usr) external view returns (bool) {
+        return _members.contains(usr);
     }
 
     function memberCount() external view returns (uint256) {

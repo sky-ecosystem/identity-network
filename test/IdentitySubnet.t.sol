@@ -1,4 +1,19 @@
+// SPDX-FileCopyrightText: © 2026 Dai Foundation <www.daifoundation.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 pragma solidity ^0.8.24;
 
 import { Test } from "forge-std/Test.sol";
@@ -9,18 +24,22 @@ contract IdentitySubnetTest is Test {
     IdentitySubnet subnet;
 
     address ward  = address(0xA1);
+    address bud   = address(0xA2);
     address user1 = address(0xB1);
     address user2 = address(0xB2);
     address user3 = address(0xB3);
 
     event Rely(address indexed usr);
     event Deny(address indexed usr);
+    event Kiss(address indexed usr);
+    event Diss(address indexed usr);
     event AddMember(address indexed usr);
     event RemoveMember(address indexed usr);
 
     function setUp() public {
         subnet = new IdentitySubnet();
         subnet.rely(ward);
+        subnet.kiss(bud);
     }
 
     // --- Auth ---
@@ -56,29 +75,64 @@ contract IdentitySubnetTest is Test {
         subnet.deny(ward);
     }
 
+    // --- Kiss / Diss ---
+
+    function testKiss() public {
+        address newBud = address(0xC2);
+        vm.expectEmit(true, true, true, true);
+        emit Kiss(newBud);
+        subnet.kiss(newBud);
+        assertEq(subnet.buds(newBud), 1);
+    }
+
+    function testDissSubnet() public {
+        vm.expectEmit(true, true, true, true);
+        emit Diss(bud);
+        subnet.diss(bud);
+        assertEq(subnet.buds(bud), 0);
+    }
+
+    function testRevertKissNotAuthorized() public {
+        vm.prank(bud);
+        vm.expectRevert("IdentitySubnet/not-authorized");
+        subnet.kiss(user1);
+    }
+
+    function testRevertDissNotAuthorized() public {
+        vm.prank(bud);
+        vm.expectRevert("IdentitySubnet/not-authorized");
+        subnet.diss(bud);
+    }
+
     // --- AddMember / RemoveMember ---
 
     function testAddMember() public {
         vm.expectEmit(true, true, true, true);
         emit AddMember(user1);
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.addMember(user1);
-        assertEq(subnet.isMember(user1), 1);
+        assertTrue(subnet.isMember(user1));
     }
 
     function testRemoveMember() public {
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.addMember(user1);
 
         vm.expectEmit(true, true, true, true);
         emit RemoveMember(user1);
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.removeMember(user1);
-        assertEq(subnet.isMember(user1), 0);
+        assertFalse(subnet.isMember(user1));
     }
 
     function testRevertAddMemberNotAuthorized() public {
         vm.prank(user1);
+        vm.expectRevert("IdentitySubnet/not-authorized");
+        subnet.addMember(user1);
+    }
+
+    function testRevertAddMemberWardNotAuthorized() public {
+        vm.prank(ward);
         vm.expectRevert("IdentitySubnet/not-authorized");
         subnet.addMember(user1);
     }
@@ -90,18 +144,26 @@ contract IdentitySubnetTest is Test {
     }
 
     function testAddMemberIdempotent() public {
-        vm.startPrank(ward);
+        vm.startPrank(bud);
         subnet.addMember(user1);
         subnet.addMember(user1);
         vm.stopPrank();
-        assertEq(subnet.isMember(user1), 1);
+        assertTrue(subnet.isMember(user1));
         assertEq(subnet.memberCount(), 1);
     }
 
     function testRemoveNonMember() public {
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.removeMember(user1);
-        assertEq(subnet.isMember(user1), 0);
+        assertFalse(subnet.isMember(user1));
+    }
+
+    function testBudCannotAddAfterDiss() public {
+        subnet.diss(bud);
+
+        vm.prank(bud);
+        vm.expectRevert("IdentitySubnet/not-authorized");
+        subnet.addMember(user1);
     }
 
     // --- Batch ---
@@ -119,17 +181,17 @@ contract IdentitySubnetTest is Test {
         vm.expectEmit(true, true, true, true);
         emit AddMember(user3);
 
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.addMemberBatch(usrs);
 
-        assertEq(subnet.isMember(user1), 1);
-        assertEq(subnet.isMember(user2), 1);
-        assertEq(subnet.isMember(user3), 1);
+        assertTrue(subnet.isMember(user1));
+        assertTrue(subnet.isMember(user2));
+        assertTrue(subnet.isMember(user3));
         assertEq(subnet.memberCount(), 3);
     }
 
     function testRemoveMemberBatch() public {
-        vm.startPrank(ward);
+        vm.startPrank(bud);
         subnet.addMember(user1);
         subnet.addMember(user2);
         subnet.addMember(user3);
@@ -144,12 +206,12 @@ contract IdentitySubnetTest is Test {
         vm.expectEmit(true, true, true, true);
         emit RemoveMember(user3);
 
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.removeMemberBatch(usrs);
 
-        assertEq(subnet.isMember(user1), 0);
-        assertEq(subnet.isMember(user2), 1);
-        assertEq(subnet.isMember(user3), 0);
+        assertFalse(subnet.isMember(user1));
+        assertTrue(subnet.isMember(user2));
+        assertFalse(subnet.isMember(user3));
         assertEq(subnet.memberCount(), 1);
     }
 
@@ -170,20 +232,20 @@ contract IdentitySubnetTest is Test {
     }
 
     function testAddMemberBatchEmpty() public {
-        vm.prank(ward);
+        vm.prank(bud);
         subnet.addMemberBatch(new address[](0));
     }
 
     // --- Query ---
 
     function testIsMemberDefault() public view {
-        assertEq(subnet.isMember(user1), 0);
+        assertFalse(subnet.isMember(user1));
     }
 
     function testMemberCount() public {
         assertEq(subnet.memberCount(), 0);
 
-        vm.startPrank(ward);
+        vm.startPrank(bud);
         subnet.addMember(user1);
         assertEq(subnet.memberCount(), 1);
         subnet.addMember(user2);
@@ -194,7 +256,7 @@ contract IdentitySubnetTest is Test {
     }
 
     function testMemberAt() public {
-        vm.startPrank(ward);
+        vm.startPrank(bud);
         subnet.addMember(user1);
         subnet.addMember(user2);
         vm.stopPrank();
@@ -204,7 +266,7 @@ contract IdentitySubnetTest is Test {
     }
 
     function testGetMembers() public {
-        vm.startPrank(ward);
+        vm.startPrank(bud);
         subnet.addMember(user1);
         subnet.addMember(user2);
         subnet.addMember(user3);
