@@ -34,7 +34,7 @@ contract IdentityNetwork is IIdentityNetwork {
         _;
     }
     modifier toll {
-        require(buds[msg.sender] == 1, "IdentityNetwork/not-authorized");
+        require(buds[msg.sender] == 1, "IdentityNetwork/not-operator");
         _;
     }
 
@@ -138,8 +138,8 @@ contract IdentityNetwork is IIdentityNetwork {
         return _members.values();
     }
 
-    function isSubnet(address subnet) external view returns (uint256) {
-        return _subnets.contains(subnet) ? 1 : 0;
+    function isSubnet(address subnet) external view returns (bool) {
+        return _subnets.contains(subnet);
     }
 
     function subnetCount() external view returns (uint256) {

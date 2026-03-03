@@ -105,8 +105,8 @@ contract IdentityFactoryTest is Test {
         assertEq(n.wards(address(factory)), 0);
         assertEq(n.buds(address(factory)), 0);
         assertEq(n.subnetCount(), 2);
-        assertEq(n.isSubnet(s1), 1);
-        assertEq(n.isSubnet(s2), 1);
+        assertTrue(n.isSubnet(s1));
+        assertTrue(n.isSubnet(s2));
     }
 
     // --- createNetwork with buds and members ---
@@ -145,7 +145,7 @@ contract IdentityFactoryTest is Test {
         assertEq(n.memberCount(), 1);
         assertEq(n.subnetCount(), 1);
         assertTrue(n.isMember(user1));
-        assertEq(n.isSubnet(child), 1);
+        assertTrue(n.isSubnet(child));
     }
 
     // --- Event ---
@@ -162,11 +162,11 @@ contract IdentityFactoryTest is Test {
         IdentityNetwork n = IdentityNetwork(addr);
 
         vm.prank(address(factory));
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         n.addMember(user1);
 
         vm.prank(address(factory));
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         n.addSubnet(address(0x1));
     }
 

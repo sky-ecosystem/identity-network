@@ -138,19 +138,19 @@ contract IdentityNetworkTest is Test {
 
     function testRevertAddMemberNotAuthorized() public {
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addMember(user1);
     }
 
     function testRevertAddMemberWardNotAuthorized() public {
         vm.prank(ward);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addMember(user1);
     }
 
     function testRevertRemoveMemberNotAuthorized() public {
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.removeMember(user1);
     }
 
@@ -173,7 +173,7 @@ contract IdentityNetworkTest is Test {
         network.diss(bud);
 
         vm.prank(bud);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addMember(user1);
     }
 
@@ -230,7 +230,7 @@ contract IdentityNetworkTest is Test {
         address[] memory usrs = new address[](1);
         usrs[0] = user1;
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addMemberBatch(usrs);
     }
 
@@ -238,7 +238,7 @@ contract IdentityNetworkTest is Test {
         address[] memory usrs = new address[](1);
         usrs[0] = user1;
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.removeMemberBatch(usrs);
     }
 
@@ -299,7 +299,7 @@ contract IdentityNetworkTest is Test {
         network.addSubnet(address(childA));
 
         assertEq(network.subnetCount(), 1);
-        assertEq(network.isSubnet(address(childA)), 1);
+        assertTrue(network.isSubnet(address(childA)));
         assertEq(network.subnetAt(0), address(childA));
     }
 
@@ -331,7 +331,7 @@ contract IdentityNetworkTest is Test {
         network.removeSubnet(address(childA));
         vm.stopPrank();
 
-        assertEq(network.isSubnet(address(childA)), 0);
+        assertFalse(network.isSubnet(address(childA)));
     }
 
     function testReAddAfterRemoveSubnet() public {
@@ -342,24 +342,24 @@ contract IdentityNetworkTest is Test {
         vm.stopPrank();
 
         assertEq(network.subnetCount(), 1);
-        assertEq(network.isSubnet(address(childA)), 1);
+        assertTrue(network.isSubnet(address(childA)));
     }
 
     function testRevertAddSubnetNotAuthorized() public {
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addSubnet(address(childA));
     }
 
     function testRevertAddSubnetWardNotAuthorized() public {
         vm.prank(ward);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addSubnet(address(childA));
     }
 
     function testRevertRemoveSubnetNotAuthorized() public {
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.removeSubnet(address(childA));
     }
 
@@ -367,7 +367,7 @@ contract IdentityNetworkTest is Test {
         network.diss(bud);
 
         vm.prank(bud);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addSubnet(address(childA));
     }
 
@@ -390,9 +390,9 @@ contract IdentityNetworkTest is Test {
         network.addSubnetBatch(subs);
 
         assertEq(network.subnetCount(), 3);
-        assertEq(network.isSubnet(address(childA)), 1);
-        assertEq(network.isSubnet(address(childB)), 1);
-        assertEq(network.isSubnet(address(childC)), 1);
+        assertTrue(network.isSubnet(address(childA)));
+        assertTrue(network.isSubnet(address(childB)));
+        assertTrue(network.isSubnet(address(childC)));
     }
 
     function testRemoveSubnetBatch() public {
@@ -413,9 +413,9 @@ contract IdentityNetworkTest is Test {
         network.removeSubnetBatch(subs);
         vm.stopPrank();
 
-        assertEq(network.isSubnet(address(childA)), 0);
-        assertEq(network.isSubnet(address(childB)), 1);
-        assertEq(network.isSubnet(address(childC)), 0);
+        assertFalse(network.isSubnet(address(childA)));
+        assertTrue(network.isSubnet(address(childB)));
+        assertFalse(network.isSubnet(address(childC)));
         assertEq(network.subnetCount(), 1);
     }
 
@@ -423,7 +423,7 @@ contract IdentityNetworkTest is Test {
         address[] memory subs = new address[](1);
         subs[0] = address(childA);
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.addSubnetBatch(subs);
     }
 
@@ -431,7 +431,7 @@ contract IdentityNetworkTest is Test {
         address[] memory subs = new address[](1);
         subs[0] = address(childA);
         vm.prank(user1);
-        vm.expectRevert("IdentityNetwork/not-authorized");
+        vm.expectRevert("IdentityNetwork/not-operator");
         network.removeSubnetBatch(subs);
     }
 
