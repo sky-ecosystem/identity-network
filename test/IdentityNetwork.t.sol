@@ -290,6 +290,33 @@ contract IdentityNetworkTest is Test {
         assertEq(members[2], user3);
     }
 
+    function testIsDirectMemberDefault() public view {
+        assertFalse(network.isDirectMember(user1));
+    }
+
+    function testIsDirectMemberTrue() public {
+        vm.prank(bud);
+        network.addMember(user1);
+        assertTrue(network.isDirectMember(user1));
+    }
+
+    function testIsDirectMemberAfterRemove() public {
+        vm.startPrank(bud);
+        network.addMember(user1);
+        network.removeMember(user1);
+        vm.stopPrank();
+        assertFalse(network.isDirectMember(user1));
+    }
+
+    function testIsDirectMemberNotSubnetMember() public {
+        childA.addMember(user1);
+        vm.prank(bud);
+        network.addSubnet(address(childA));
+
+        assertTrue(network.isMember(user1));
+        assertFalse(network.isDirectMember(user1));
+    }
+
     // --- AddSubnet / RemoveSubnet ---
 
     function testAddSubnet() public {

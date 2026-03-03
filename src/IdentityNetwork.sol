@@ -138,6 +138,10 @@ contract IdentityNetwork is IIdentityNetwork {
         return _members.values();
     }
 
+    function isDirectMember(address usr) external view returns (bool) {
+        return _members.contains(usr);
+    }
+
     function isSubnet(address subnet) external view returns (bool) {
         return _subnets.contains(subnet);
     }
