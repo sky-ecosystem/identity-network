@@ -39,6 +39,7 @@ contract IdentityNetwork is IIdentityNetwork {
     }
 
     // --- Data ---
+    EnumerableSet.AddressSet private _members;
     EnumerableSet.AddressSet private _subnets;
 
     // --- Events ---
@@ -46,6 +47,8 @@ contract IdentityNetwork is IIdentityNetwork {
     event Deny(address indexed usr);
     event Kiss(address indexed usr);
     event Diss(address indexed usr);
+    event AddMember(address indexed usr);
+    event RemoveMember(address indexed usr);
     event AddSubnet(address indexed subnet);
     event RemoveSubnet(address indexed subnet);
 
@@ -53,6 +56,33 @@ contract IdentityNetwork is IIdentityNetwork {
     constructor() {
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
+    }
+
+    // --- Member Management ---
+    function addMember(address usr) external toll {
+        _members.add(usr);
+        emit AddMember(usr);
+    }
+
+    function removeMember(address usr) external toll {
+        _members.remove(usr);
+        emit RemoveMember(usr);
+    }
+
+    function addMemberBatch(address[] calldata usrs) external toll {
+        for (uint256 i; i < usrs.length;) {
+            _members.add(usrs[i]);
+            emit AddMember(usrs[i]);
+            unchecked { ++i; }
+        }
+    }
+
+    function removeMemberBatch(address[] calldata usrs) external toll {
+        for (uint256 i; i < usrs.length;) {
+            _members.remove(usrs[i]);
+            emit RemoveMember(usrs[i]);
+            unchecked { ++i; }
+        }
     }
 
     // --- Subnet Management ---
@@ -84,6 +114,7 @@ contract IdentityNetwork is IIdentityNetwork {
 
     // --- Query ---
     function isMember(address usr) external view returns (bool) {
+        if (_members.contains(usr)) return true;
         uint256 len = _subnets.length();
         for (uint256 i; i < len;) {
             if (IIdentityNetwork(_subnets.at(i)).isMember(usr)) {
@@ -92,6 +123,18 @@ contract IdentityNetwork is IIdentityNetwork {
             unchecked { ++i; }
         }
         return false;
+    }
+
+    function memberCount() external view returns (uint256) {
+        return _members.length();
+    }
+
+    function memberAt(uint256 idx) external view returns (address) {
+        return _members.at(idx);
+    }
+
+    function getMembers() external view returns (address[] memory) {
+        return _members.values();
     }
 
     function isSubnet(address subnet) external view returns (uint256) {

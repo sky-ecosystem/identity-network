@@ -18,7 +18,6 @@ pragma solidity ^0.8.24;
 
 import { Test } from "forge-std/Test.sol";
 import { IdentityFactory } from "src/IdentityFactory.sol";
-import { IdentitySubnet }  from "src/IdentitySubnet.sol";
 import { IdentityNetwork } from "src/IdentityNetwork.sol";
 
 contract IdentityFactoryTest is Test {
@@ -34,124 +33,72 @@ contract IdentityFactoryTest is Test {
     address[] noBuds;
     address[] noAddrs;
 
-    event CreateSubnet(address indexed subnet, address indexed admin, address[] buds, address[] members);
-    event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] subnets);
+    event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] members, address[] subnets);
 
     function setUp() public {
         factory = new IdentityFactory();
     }
 
-    // --- createSubnet ---
-
-    function testCreateSubnetEmpty() public {
-        address addr = factory.createSubnet(admin, noBuds, noAddrs);
-        IdentitySubnet s = IdentitySubnet(addr);
-
-        assertEq(s.wards(admin), 1);
-        assertEq(s.wards(address(factory)), 0);
-        assertEq(s.buds(address(factory)), 0);
-        assertEq(s.memberCount(), 0);
-    }
-
-    function testCreateSubnetWithBuds() public {
-        address[] memory buds = new address[](1);
-        buds[0] = operator;
-
-        address addr = factory.createSubnet(admin, buds, noAddrs);
-        IdentitySubnet s = IdentitySubnet(addr);
-
-        assertEq(s.buds(operator), 1);
-
-        vm.prank(operator);
-        s.addMember(user1);
-        assertTrue(s.isMember(user1));
-    }
-
-    function testCreateSubnetWithMembers() public {
-        address[] memory members = new address[](3);
-        members[0] = user1;
-        members[1] = user2;
-        members[2] = user3;
-
-        address addr = factory.createSubnet(admin, noBuds, members);
-        IdentitySubnet s = IdentitySubnet(addr);
-
-        assertEq(s.wards(admin), 1);
-        assertEq(s.wards(address(factory)), 0);
-        assertEq(s.buds(address(factory)), 0);
-        assertEq(s.memberCount(), 3);
-        assertTrue(s.isMember(user1));
-        assertTrue(s.isMember(user2));
-        assertTrue(s.isMember(user3));
-    }
-
-    function testCreateSubnetWithBudsAndMembers() public {
-        address[] memory buds = new address[](1);
-        buds[0] = operator;
-
-        address[] memory members = new address[](2);
-        members[0] = user1;
-        members[1] = user2;
-
-        address addr = factory.createSubnet(admin, buds, members);
-        IdentitySubnet s = IdentitySubnet(addr);
-
-        assertEq(s.buds(operator), 1);
-        assertEq(s.memberCount(), 2);
-        assertTrue(s.isMember(user1));
-        assertTrue(s.isMember(user2));
-    }
-
-    function testCreateSubnetEmitsEvent() public {
-        vm.recordLogs();
-        factory.createSubnet(admin, noBuds, noAddrs);
-    }
-
-    function testCreateSubnetFactoryHasNoAuth() public {
-        address addr = factory.createSubnet(admin, noBuds, noAddrs);
-        IdentitySubnet s = IdentitySubnet(addr);
-
-        vm.prank(address(factory));
-        vm.expectRevert("IdentitySubnet/not-authorized");
-        s.addMember(user1);
-    }
-
-    // --- createNetwork ---
+    // --- createNetwork (empty) ---
 
     function testCreateNetworkEmpty() public {
-        address addr = factory.createNetwork(admin, noBuds, noAddrs);
+        address addr = factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
         IdentityNetwork n = IdentityNetwork(addr);
 
         assertEq(n.wards(admin), 1);
         assertEq(n.wards(address(factory)), 0);
         assertEq(n.buds(address(factory)), 0);
+        assertEq(n.memberCount(), 0);
         assertEq(n.subnetCount(), 0);
     }
+
+    // --- createNetwork with buds ---
 
     function testCreateNetworkWithBuds() public {
         address[] memory buds = new address[](1);
         buds[0] = operator;
 
-        address addr = factory.createNetwork(admin, buds, noAddrs);
+        address addr = factory.createNetwork(admin, buds, noAddrs, noAddrs);
         IdentityNetwork n = IdentityNetwork(addr);
 
         assertEq(n.buds(operator), 1);
 
-        address s1 = factory.createSubnet(admin, noBuds, noAddrs);
         vm.prank(operator);
-        n.addSubnet(s1);
-        assertEq(n.isSubnet(s1), 1);
+        n.addMember(user1);
+        assertTrue(n.isMember(user1));
     }
 
+    // --- createNetwork with members ---
+
+    function testCreateNetworkWithMembers() public {
+        address[] memory members = new address[](3);
+        members[0] = user1;
+        members[1] = user2;
+        members[2] = user3;
+
+        address addr = factory.createNetwork(admin, noBuds, members, noAddrs);
+        IdentityNetwork n = IdentityNetwork(addr);
+
+        assertEq(n.wards(admin), 1);
+        assertEq(n.wards(address(factory)), 0);
+        assertEq(n.buds(address(factory)), 0);
+        assertEq(n.memberCount(), 3);
+        assertTrue(n.isMember(user1));
+        assertTrue(n.isMember(user2));
+        assertTrue(n.isMember(user3));
+    }
+
+    // --- createNetwork with subnets ---
+
     function testCreateNetworkWithSubnets() public {
-        address s1 = factory.createSubnet(admin, noBuds, noAddrs);
-        address s2 = factory.createSubnet(admin, noBuds, noAddrs);
+        address s1 = factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
+        address s2 = factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
 
         address[] memory subs = new address[](2);
         subs[0] = s1;
         subs[1] = s2;
 
-        address addr = factory.createNetwork(admin, noBuds, subs);
+        address addr = factory.createNetwork(admin, noBuds, noAddrs, subs);
         IdentityNetwork n = IdentityNetwork(addr);
 
         assertEq(n.wards(admin), 1);
@@ -162,14 +109,61 @@ contract IdentityFactoryTest is Test {
         assertEq(n.isSubnet(s2), 1);
     }
 
-    function testCreateNetworkEmitsEvent() public {
-        vm.recordLogs();
-        factory.createNetwork(admin, noBuds, noAddrs);
+    // --- createNetwork with buds and members ---
+
+    function testCreateNetworkWithBudsAndMembers() public {
+        address[] memory buds = new address[](1);
+        buds[0] = operator;
+
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+
+        address addr = factory.createNetwork(admin, buds, members, noAddrs);
+        IdentityNetwork n = IdentityNetwork(addr);
+
+        assertEq(n.buds(operator), 1);
+        assertEq(n.memberCount(), 2);
+        assertTrue(n.isMember(user1));
+        assertTrue(n.isMember(user2));
     }
 
-    function testCreateNetworkFactoryHasNoAuth() public {
-        address addr = factory.createNetwork(admin, noBuds, noAddrs);
+    // --- createNetwork with members and subnets ---
+
+    function testCreateNetworkWithMembersAndSubnets() public {
+        address child = factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
+
+        address[] memory members = new address[](1);
+        members[0] = user1;
+
+        address[] memory subs = new address[](1);
+        subs[0] = child;
+
+        address addr = factory.createNetwork(admin, noBuds, members, subs);
         IdentityNetwork n = IdentityNetwork(addr);
+
+        assertEq(n.memberCount(), 1);
+        assertEq(n.subnetCount(), 1);
+        assertTrue(n.isMember(user1));
+        assertEq(n.isSubnet(child), 1);
+    }
+
+    // --- Event ---
+
+    function testCreateNetworkEmitsEvent() public {
+        vm.recordLogs();
+        factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
+    }
+
+    // --- Factory cleanup ---
+
+    function testCreateNetworkFactoryHasNoAuth() public {
+        address addr = factory.createNetwork(admin, noBuds, noAddrs, noAddrs);
+        IdentityNetwork n = IdentityNetwork(addr);
+
+        vm.prank(address(factory));
+        vm.expectRevert("IdentityNetwork/not-authorized");
+        n.addMember(user1);
 
         vm.prank(address(factory));
         vm.expectRevert("IdentityNetwork/not-authorized");
@@ -182,26 +176,46 @@ contract IdentityFactoryTest is Test {
         address[] memory buds = new address[](1);
         buds[0] = operator;
 
+        // Create a leaf network with direct members
         address[] memory members = new address[](2);
         members[0] = user1;
         members[1] = user2;
+        address leaf = factory.createNetwork(admin, buds, members, noAddrs);
 
-        address s1 = factory.createSubnet(admin, buds, members);
-        address s2 = factory.createSubnet(admin, buds, noAddrs);
-
+        // Create another leaf, add a member via operator
+        address leaf2 = factory.createNetwork(admin, buds, noAddrs, noAddrs);
         vm.prank(operator);
-        IdentitySubnet(s2).addMember(user3);
+        IdentityNetwork(leaf2).addMember(user3);
 
+        // Create a root network aggregating both leaves
         address[] memory subs = new address[](2);
-        subs[0] = s1;
-        subs[1] = s2;
-
-        address net = factory.createNetwork(admin, noBuds, subs);
-        IdentityNetwork n = IdentityNetwork(net);
+        subs[0] = leaf;
+        subs[1] = leaf2;
+        address root = factory.createNetwork(admin, noBuds, noAddrs, subs);
+        IdentityNetwork n = IdentityNetwork(root);
 
         assertTrue(n.isMember(user1));
         assertTrue(n.isMember(user2));
         assertTrue(n.isMember(user3));
         assertFalse(n.isMember(address(0xDEAD)));
+    }
+
+    function testEndToEndDirectAndSubnetMembership() public {
+        // Create a child with user2 as a member
+        address[] memory childMembers = new address[](1);
+        childMembers[0] = user2;
+        address child = factory.createNetwork(admin, noBuds, childMembers, noAddrs);
+
+        // Create root with user1 as direct member and the child as subnet
+        address[] memory rootMembers = new address[](1);
+        rootMembers[0] = user1;
+        address[] memory subs = new address[](1);
+        subs[0] = child;
+        address root = factory.createNetwork(admin, noBuds, rootMembers, subs);
+        IdentityNetwork n = IdentityNetwork(root);
+
+        assertTrue(n.isMember(user1));  // direct
+        assertTrue(n.isMember(user2));  // via subnet
+        assertFalse(n.isMember(user3)); // neither
     }
 }

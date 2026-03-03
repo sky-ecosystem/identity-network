@@ -16,47 +16,29 @@
 
 pragma solidity ^0.8.24;
 
-import { IdentitySubnet }  from "src/IdentitySubnet.sol";
 import { IdentityNetwork } from "src/IdentityNetwork.sol";
 
 contract IdentityFactory {
 
     // --- Events ---
-    event CreateSubnet(address indexed subnet, address indexed admin, address[] buds, address[] members);
-    event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] subnets);
+    event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] members, address[] subnets);
 
     // --- Factory ---
-    function createSubnet(address admin, address[] calldata buds, address[] calldata members) external returns (address subnet) {
-        IdentitySubnet s = new IdentitySubnet();
-        for (uint256 i; i < buds.length;) {
-            s.kiss(buds[i]);
-            unchecked { ++i; }
-        }
-        if (members.length > 0) {
-            s.kiss(address(this));
-            s.addMemberBatch(members);
-            s.diss(address(this));
-        }
-        s.rely(admin);
-        s.deny(address(this));
-        subnet = address(s);
-        emit CreateSubnet(subnet, admin, buds, members);
-    }
-
-    function createNetwork(address admin, address[] calldata buds, address[] calldata subnets) external returns (address network) {
+    function createNetwork(address admin, address[] calldata buds, address[] calldata members, address[] calldata subnets) external returns (address network) {
         IdentityNetwork n = new IdentityNetwork();
         for (uint256 i; i < buds.length;) {
             n.kiss(buds[i]);
             unchecked { ++i; }
         }
-        if (subnets.length > 0) {
+        if (members.length > 0 || subnets.length > 0) {
             n.kiss(address(this));
-            n.addSubnetBatch(subnets);
+            if (members.length > 0) n.addMemberBatch(members);
+            if (subnets.length > 0) n.addSubnetBatch(subnets);
             n.diss(address(this));
         }
         n.rely(admin);
         n.deny(address(this));
         network = address(n);
-        emit CreateNetwork(network, admin, buds, subnets);
+        emit CreateNetwork(network, admin, buds, members, subnets);
     }
 }

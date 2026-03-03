@@ -2,27 +2,11 @@
 
 On-chain identity verification registries for the Sky ecosystem. See the [docs](https://github.com/sky-ecosystem/laniakea-docs/blob/main/sky-agents/halo-agents/identity-network.md).
 
-```
-                        Your Contract
-                             |
-                      isMember(addr)
-                             |
-                             v
-                      IdentityNetwork
-                      /      |      \
-              isMember(addr) |  isMember(addr)
-                  /          |          \
-                 v           v           v
-            SubnetUS    SubnetEU    SubnetInst
-            [members]   [members]   [members]
-```
-
 ## Contracts
 
 - **`IIdentityNetwork`** - Shared interface exposing `isMember(address) -> bool`.
-- **`IdentitySubnet`** - Leaf-level member set. Buds (semi-trusted operators) can add/remove members. Wards manage auth and bud access.
-- **`IdentityNetwork`** - Aggregator of subnets. `isMember` loops all registered subnets. Buds manage the subnet list.
-- **`IdentityFactory`** - Deploys subnets and networks with initial admin, buds, and members/subnets in one call.
+- **`IdentityNetwork`** - Holds both a direct member set and a list of child subnets. `isMember` checks direct members first, then loops all registered subnets. Buds manage members and subnets. Wards manage auth and bud access.
+- **`IdentityFactory`** - Deploys networks with initial admin, buds, members, and subnets in one call.
 
 ## Build & Test
 
