@@ -24,7 +24,7 @@ contract IdentityNetwork is IIdentityNetwork {
 
     // --- Auth ---
     mapping(address usr => uint256 allowed) public wards;
-    mapping(address usr => uint256 allowed) public buds;
+    mapping(address usr => uint256 allowed) public buds; // TODO: decide if we want to split this to two roles
     function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
     function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     function kiss(address usr) external auth { buds[usr] = 1; emit Kiss(usr); }
