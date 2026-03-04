@@ -48,7 +48,7 @@ contract IdentityFactoryTest is Test {
         assertEq(n.wards(admin), 1);
         assertEq(n.wards(address(factory)), 0);
         assertEq(n.buds(address(factory)), 0);
-        assertEq(n.memberCount(), 0);
+        assertEq(n.directMemberCount(), 0);
         assertEq(n.subnetCount(), 0);
     }
 
@@ -82,7 +82,7 @@ contract IdentityFactoryTest is Test {
         assertEq(n.wards(admin), 1);
         assertEq(n.wards(address(factory)), 0);
         assertEq(n.buds(address(factory)), 0);
-        assertEq(n.memberCount(), 3);
+        assertEq(n.directMemberCount(), 3);
         assertTrue(n.isMember(user1));
         assertTrue(n.isMember(user2));
         assertTrue(n.isMember(user3));
@@ -123,7 +123,7 @@ contract IdentityFactoryTest is Test {
         IdentityNetwork n = IdentityNetwork(addr);
 
         assertEq(n.buds(operator), 1);
-        assertEq(n.memberCount(), 2);
+        assertEq(n.directMemberCount(), 2);
         assertTrue(n.isMember(user1));
         assertTrue(n.isMember(user2));
     }
@@ -142,7 +142,7 @@ contract IdentityFactoryTest is Test {
         address addr = factory.createNetwork(admin, noBuds, members, subs);
         IdentityNetwork n = IdentityNetwork(addr);
 
-        assertEq(n.memberCount(), 1);
+        assertEq(n.directMemberCount(), 1);
         assertEq(n.subnetCount(), 1);
         assertTrue(n.isMember(user1));
         assertTrue(n.isSubnet(child));

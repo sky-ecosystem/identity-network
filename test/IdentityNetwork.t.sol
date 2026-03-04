@@ -160,7 +160,7 @@ contract IdentityNetworkTest is Test {
         network.addMember(user1);
         vm.stopPrank();
         assertTrue(network.isMember(user1));
-        assertEq(network.memberCount(), 1);
+        assertEq(network.directMemberCount(), 1);
     }
 
     function testRemoveNonMember() public {
@@ -198,7 +198,7 @@ contract IdentityNetworkTest is Test {
         assertTrue(network.isMember(user1));
         assertTrue(network.isMember(user2));
         assertTrue(network.isMember(user3));
-        assertEq(network.memberCount(), 3);
+        assertEq(network.directMemberCount(), 3);
     }
 
     function testRemoveMemberBatch() public {
@@ -223,7 +223,7 @@ contract IdentityNetworkTest is Test {
         assertFalse(network.isMember(user1));
         assertTrue(network.isMember(user2));
         assertFalse(network.isMember(user3));
-        assertEq(network.memberCount(), 1);
+        assertEq(network.directMemberCount(), 1);
     }
 
     function testRevertAddMemberBatchNotAuthorized() public {
@@ -253,37 +253,37 @@ contract IdentityNetworkTest is Test {
         assertFalse(network.isMember(user1));
     }
 
-    function testMemberCount() public {
-        assertEq(network.memberCount(), 0);
+    function testDirectMemberCount() public {
+        assertEq(network.directMemberCount(), 0);
 
         vm.startPrank(bud);
         network.addMember(user1);
-        assertEq(network.memberCount(), 1);
+        assertEq(network.directMemberCount(), 1);
         network.addMember(user2);
-        assertEq(network.memberCount(), 2);
+        assertEq(network.directMemberCount(), 2);
         network.removeMember(user1);
-        assertEq(network.memberCount(), 1);
+        assertEq(network.directMemberCount(), 1);
         vm.stopPrank();
     }
 
-    function testMemberAt() public {
+    function testDirectMemberAt() public {
         vm.startPrank(bud);
         network.addMember(user1);
         network.addMember(user2);
         vm.stopPrank();
 
-        assertEq(network.memberAt(0), user1);
-        assertEq(network.memberAt(1), user2);
+        assertEq(network.directMemberAt(0), user1);
+        assertEq(network.directMemberAt(1), user2);
     }
 
-    function testGetMembers() public {
+    function testGetDirectMembers() public {
         vm.startPrank(bud);
         network.addMember(user1);
         network.addMember(user2);
         network.addMember(user3);
         vm.stopPrank();
 
-        address[] memory members = network.getMembers();
+        address[] memory members = network.getDirectMembers();
         assertEq(members.length, 3);
         assertEq(members[0], user1);
         assertEq(members[1], user2);
