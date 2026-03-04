@@ -24,20 +24,29 @@ contract IdentityFactory {
     event CreateNetwork(address indexed network, address indexed admin, address[] buds, address[] members, address[] subnets);
 
     // --- Factory ---
-    function createNetwork(address admin, address[] calldata buds, address[] calldata members, address[] calldata subnets) external returns (address network) {
+    function createNetwork(
+        address            admin,
+        address[] calldata buds,
+        address[] calldata members,
+        address[] calldata subnets
+    ) external returns (address network) {
+
         IdentityNetwork n = new IdentityNetwork();
         for (uint256 i; i < buds.length;) {
             n.kiss(buds[i]);
             unchecked { ++i; }
         }
+
         if (members.length > 0 || subnets.length > 0) {
             n.kiss(address(this));
             if (members.length > 0) n.addMemberBatch(members);
             if (subnets.length > 0) n.addSubnetBatch(subnets);
             n.diss(address(this));
         }
+
         n.rely(admin);
         n.deny(address(this));
+
         network = address(n);
         emit CreateNetwork(network, admin, buds, members, subnets);
     }
