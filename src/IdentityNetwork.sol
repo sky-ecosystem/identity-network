@@ -22,27 +22,12 @@ import { IIdentityNetwork } from "src/IIdentityNetwork.sol";
 contract IdentityNetwork is IIdentityNetwork {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    // --- Auth ---
     mapping(address usr => uint256 allowed) public wards;
     mapping(address usr => uint256 allowed) public buds; // TODO: decide if we want to split this to two roles
-    function rely(address usr) external auth { wards[usr] = 1; emit Rely(usr); }
-    function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
-    function kiss(address usr) external auth { buds[usr] = 1; emit Kiss(usr); }
-    function diss(address usr) external auth { buds[usr] = 0; emit Diss(usr); }
-    modifier auth {
-        require(wards[msg.sender] == 1, "IdentityNetwork/not-authorized");
-        _;
-    }
-    modifier toll {
-        require(buds[msg.sender] == 1, "IdentityNetwork/not-operator");
-        _;
-    }
 
-    // --- Data ---
     EnumerableSet.AddressSet private _members;
     EnumerableSet.AddressSet private _subnets;
 
-    // --- Events ---
     event Rely(address indexed usr);
     event Deny(address indexed usr);
     event Kiss(address indexed usr);
@@ -52,13 +37,43 @@ contract IdentityNetwork is IIdentityNetwork {
     event AddSubnet(address indexed subnet);
     event RemoveSubnet(address indexed subnet);
 
-    // --- Constructor ---
+    modifier auth {
+        require(wards[msg.sender] == 1, "IdentityNetwork/not-authorized");
+        _;
+    }
+
+    modifier toll {
+        require(buds[msg.sender] == 1, "IdentityNetwork/not-operator");
+        _;
+    }
+
     constructor() {
         wards[msg.sender] = 1;
         emit Rely(msg.sender);
     }
 
+    function rely(address usr) external auth {
+        wards[usr] = 1;
+        emit Rely(usr);
+    }
+
+    function deny(address usr) external auth {
+        wards[usr] = 0;
+        emit Deny(usr);
+    }
+
+    function kiss(address usr) external auth {
+        buds[usr] = 1;
+        emit Kiss(usr);
+    }
+
+    function diss(address usr) external auth {
+        buds[usr] = 0;
+        emit Diss(usr);
+    }
+
     // --- Member Management ---
+
     function addMember(address usr) external toll {
         _members.add(usr);
         emit AddMember(usr);
@@ -86,6 +101,7 @@ contract IdentityNetwork is IIdentityNetwork {
     }
 
     // --- Subnet Management ---
+
     // Warning: avoid adding subnets that create loops
     function addSubnet(address subnet) external toll {
         _subnets.add(subnet);
@@ -114,16 +130,19 @@ contract IdentityNetwork is IIdentityNetwork {
     }
 
     // --- Query ---
+
     function isMember(address usr) external view returns (bool) {
         if (_members.contains(usr)) return true;
         uint256 len = _subnets.length();
         for (uint256 i; i < len;) {
-            if (IIdentityNetwork(_subnets.at(i)).isMember(usr)) {
-                return true;
-            }
+            if (IIdentityNetwork(_subnets.at(i)).isMember(usr)) return true;
             unchecked { ++i; }
         }
         return false;
+    }
+
+    function isDirectMember(address usr) external view returns (bool) {
+        return _members.contains(usr);
     }
 
     function memberCount() external view returns (uint256) {
@@ -136,10 +155,6 @@ contract IdentityNetwork is IIdentityNetwork {
 
     function getMembers() external view returns (address[] memory) {
         return _members.values();
-    }
-
-    function isDirectMember(address usr) external view returns (bool) {
-        return _members.contains(usr);
     }
 
     function isSubnet(address subnet) external view returns (bool) {
