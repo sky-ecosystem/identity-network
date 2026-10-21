@@ -6,7 +6,12 @@ On-chain identity verification registries for the Sky ecosystem. See the [docs](
 
 - **`IIdentityNetwork`** - Shared interface exposing `isMember(address) -> bool`.
 - **`IdentityNetwork`** - Holds both a direct member set and a list of child subnets. `isMember` checks direct members first, then loops all registered subnets. Buds manage members and subnets. Wards manage auth and bud access.
-- **`IdentityFactory`** - Deploys networks with initial admin, buds, members, and subnets in one call.
+
+### Deploy Libraries (`deploy/`)
+
+- **`IdentityNetworkDeploy`** - `deploy(deployer, owner)` deploys a new `IdentityNetwork` and hands ward over from the deployer to the owner.
+- **`IdentityNetworkInit`** - `init(network, buds, members, subnets)` configures a network's initial buds, members and subnets. Must be executed by a ward of the network (e.g. the pause proxy within a spell); the executor is temporarily kissed to add members/subnets and dissed afterwards.
+- **`IdentityNetworkDeployer`** - One-time deployer contract: deploys a network and initializes it via `IdentityNetworkInit` in its constructor, hands ward over to `cfg.admin` and keeps no permissions. The network address is exposed via `network()`.
 
 ### Access Control
 
