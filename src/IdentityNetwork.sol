@@ -23,7 +23,7 @@ contract IdentityNetwork is IIdentityNetwork {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     mapping(address usr => uint256 allowed) public wards;
-    mapping(address usr => uint256 allowed) public buds; // TODO: decide if we want to split this to two roles
+    mapping(address usr => uint256 allowed) public buds;
 
     EnumerableSet.AddressSet private _directMembers;
     EnumerableSet.AddressSet private _subnets;

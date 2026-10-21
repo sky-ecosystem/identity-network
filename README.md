@@ -1,6 +1,6 @@
 # Identity Network
 
-On-chain identity verification registries for the Sky ecosystem. See the [docs](https://github.com/sky-ecosystem/laniakea-docs/blob/main/sky-agents/halo-agents/identity-network.md).
+On-chain identity verification registries for the Sky ecosystem. See the [docs](https://github.com/sky-ecosystem/laniakea-docs/).
 
 ## Contracts
 
