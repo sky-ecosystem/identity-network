@@ -290,6 +290,28 @@ contract IdentityNetworkTest is Test {
         assertEq(members[2], user3);
     }
 
+    function testGetDirectMembersPaginated() public {
+        vm.startPrank(bud);
+        network.addMember(user1);
+        network.addMember(user2);
+        network.addMember(user3);
+        vm.stopPrank();
+
+        address[] memory page = network.getDirectMembers(1, 3);
+        assertEq(page.length, 2);
+        assertEq(page[0], user2);
+        assertEq(page[1], user3);
+
+        // end past length is clamped
+        page = network.getDirectMembers(2, 10);
+        assertEq(page.length, 1);
+        assertEq(page[0], user3);
+
+        // start past end returns empty
+        assertEq(network.getDirectMembers(5, 10).length, 0);
+        assertEq(network.getDirectMembers(2, 1).length, 0);
+    }
+
     function testIsDirectMemberDefault() public view {
         assertFalse(network.isDirectMember(user1));
     }
@@ -504,6 +526,27 @@ contract IdentityNetworkTest is Test {
         assertEq(subs[0], address(childA));
         assertEq(subs[1], address(childB));
         assertEq(subs[2], address(childC));
+    }
+
+    function testGetSubnetsPaginated() public {
+        vm.startPrank(bud);
+        network.addSubnet(address(childA));
+        network.addSubnet(address(childB));
+        network.addSubnet(address(childC));
+        vm.stopPrank();
+
+        address[] memory page = network.getSubnets(0, 2);
+        assertEq(page.length, 2);
+        assertEq(page[0], address(childA));
+        assertEq(page[1], address(childB));
+
+        // end past length is clamped
+        page = network.getSubnets(2, 10);
+        assertEq(page.length, 1);
+        assertEq(page[0], address(childC));
+
+        // start past end returns empty
+        assertEq(network.getSubnets(5, 10).length, 0);
     }
 
     // --- isMember (direct + subnets) ---

@@ -159,6 +159,11 @@ contract IdentityNetwork is IIdentityNetwork {
         return _directMembers.values();
     }
 
+    // Returns members in [start, end), bounds are clamped to the set length
+    function getDirectMembers(uint256 start, uint256 end) external view returns (address[] memory) {
+        return _directMembers.values(start, end);
+    }
+
     function isSubnet(address subnet) external view returns (bool) {
         return _subnets.contains(subnet);
     }
@@ -173,5 +178,10 @@ contract IdentityNetwork is IIdentityNetwork {
 
     function getSubnets() external view returns (address[] memory) {
         return _subnets.values();
+    }
+
+    // Returns subnets in [start, end), bounds are clamped to the set length
+    function getSubnets(uint256 start, uint256 end) external view returns (address[] memory) {
+        return _subnets.values(start, end);
     }
 }
