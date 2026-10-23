@@ -1,66 +1,48 @@
-## Foundry
+# Identity Network
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+On-chain identity verification registries for the Sky ecosystem. See the [docs](https://github.com/sky-ecosystem/laniakea-docs/).
 
-Foundry consists of:
+## Contracts
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **`IIdentityNetwork`** - Shared interface exposing `isMember(address) -> bool`.
+- **`IdentityNetwork`** - Holds both a direct member set and a list of child subnets. `isMember` checks direct members first, then loops all registered subnets. Buds manage members and subnets. Wards manage auth and bud access.
 
-## Documentation
+### Deploy Libraries (`deploy/`)
 
-https://book.getfoundry.sh/
+- **`IdentityNetworkDeploy`** - `deploy(deployer, owner)` deploys a new `IdentityNetwork` and hands ward over from the deployer to the owner.
+- **`IdentityNetworkInit`** - `init(network, buds, members, subnets)` configures a network's initial buds, members and subnets. Must be executed by a ward of the network (e.g. the pause proxy within a spell); the executor is temporarily kissed to add members/subnets and dissed afterwards.
+- **`IdentityNetworkDeployer`** - One-time deployer contract: deploys a network and initializes it via `IdentityNetworkInit` in its constructor, hands ward over to `cfg.admin` and keeps no permissions. The network address is exposed via `network()`.
 
-## Usage
+### Access Control
 
-### Build
+Two-tier auth model following MakerDAO conventions:
 
-```shell
-$ forge build
+| Role | Set by | Can do |
+|------|--------|--------|
+| **Wards** (`rely`/`deny`) | Other wards | Manage wards and buds |
+| **Buds** (`kiss`/`diss`) | Wards | Add/remove members and subnets |
+
+### Membership Resolution
+
+`isMember(usr)` traverses the tree — direct members first, then each subnet recursively:
+
+```
+isMember(0xABC)
+  │
+  ├─ 0xABC in directMembers?  ──► yes → return true
+  │
+  └─ for each subnet:
+       subnet.isMember(0xABC)?  ──► yes → return true
+                                        (subnet checks its own
+                                         directMembers + subnets)
+  return false
 ```
 
-### Test
+Subnets are themselves `IIdentityNetwork` contracts, so networks can be composed (by convention, into trees, though the code itself doesn't enforce the shape).
+
+## Build & Test
 
 ```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+forge build
+forge test
 ```
