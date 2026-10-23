@@ -38,7 +38,7 @@ isMember(0xABC)
   return false
 ```
 
-Subnets are themselves `IIdentityNetwork` contracts, so networks compose into trees.
+Subnets are themselves `IIdentityNetwork` contracts, so networks can be composed (by convention, into trees, though the code itself doesn't enforce the shape).
 
 ## Build & Test
 
