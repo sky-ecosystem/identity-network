@@ -133,6 +133,8 @@ contract IdentityNetwork is IIdentityNetwork {
 
     // --- Query ---
 
+    // Warning: beyond direct members, the gas cost depends on the subnet graph and can change whenever it changes.
+    // E.g. removing a subnet moves the last one into its place, so a previously cheap lookup can become more expensive.
     function isMember(address usr) external view returns (bool) {
         if (_directMembers.contains(usr)) return true;
         uint256 len = _subnets.length();
