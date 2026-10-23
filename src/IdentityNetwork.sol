@@ -102,7 +102,9 @@ contract IdentityNetwork is IIdentityNetwork {
 
     // --- Subnet Management ---
 
-    // Warning: avoid adding subnets that create loops
+    // Warning: the subnet graph is assumed to be well constructed; nothing here enforces it.
+    // Avoid loops, avoid subnets reachable by more than one path, and keep the subnet count low.
+
     function addSubnet(address subnet) external toll {
         _subnets.add(subnet);
         emit AddSubnet(subnet);
