@@ -149,11 +149,17 @@ contract IdentityNetworkDeployTest is DssTest {
     function testInitExecutorAlreadyBud() public {
         address[] memory operators = new address[](1);
         operators[0] = address(this);
+        address[] memory members = new address[](1);
+        members[0] = user1;
+        address[] memory subnets = new address[](1);
+        subnets[0] = address(0x1);
 
         // Executor listed as a bud keeps the role after init
-        IdentityNetwork n = _deployAndInit(operators, noAddrs, noAddrs);
+        IdentityNetwork n = _deployAndInit(operators, members, subnets);
 
         assertEq(n.buds(address(this)), 1);
+        assertTrue(n.isDirectMember(user1));
+        assertTrue(n.isSubnet(address(0x1)));
     }
 
     function testInitExecutorHasNoBudRole() public {
