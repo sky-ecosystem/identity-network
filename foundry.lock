@@ -1,8 +1,8 @@
 {
-  "lib/forge-std": {
-    "tag": {
-      "name": "v1.15.0",
-      "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
+  "lib/dss-test": {
+    "branch": {
+      "name": "master",
+      "rev": "6978eea94573fda10309b4751c9c7643e27248f6"
     }
   },
   "lib/openzeppelin-contracts": {

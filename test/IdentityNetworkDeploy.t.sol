@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.8.24;
 
-import { Test } from "forge-std/Test.sol";
+import "dss-test/DssTest.sol";
 import { IdentityNetwork } from "src/IdentityNetwork.sol";
 import { IdentityNetworkDeploy } from "deploy/IdentityNetworkDeploy.sol";
 import { IdentityNetworkInit } from "deploy/IdentityNetworkInit.sol";
 
-contract IdentityNetworkDeployTest is Test {
+contract IdentityNetworkDeployTest is DssTest {
 
     address admin    = address(0xA1);
     address operator = address(0xA2);
