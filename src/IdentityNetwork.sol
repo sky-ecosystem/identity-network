@@ -105,6 +105,7 @@ contract IdentityNetwork is IIdentityNetwork {
 
     // Warning: the subnet graph is assumed to be well constructed; nothing here enforces it.
     // Avoid loops, avoid subnets reachable by more than one path, and keep the subnet count low.
+    // It is also assumed that buds across networks are well coordinated.
 
     function addSubnet(address subnet) external toll {
         _subnets.add(subnet);
