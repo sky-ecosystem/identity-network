@@ -68,6 +68,7 @@ contract IdentityNetworkDeployerTest is DssTest {
         assertEq(n.buds(operator), 1);
         assertEq(n.directMemberCount(), 1);
         assertEq(n.subnetCount(), 1);
+        assertTrue(n.isDirectMember(user1));
         assertTrue(n.isMember(user1));  // direct
         assertTrue(n.isMember(user2));  // via subnet
         assertTrue(n.isSubnet(address(child)));

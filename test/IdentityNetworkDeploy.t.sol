@@ -22,11 +22,13 @@ import { IdentityNetworkInit } from "deploy/IdentityNetworkInit.sol";
 
 contract IdentityNetworkDeployTest is DssTest {
 
-    address admin    = address(0xA1);
-    address operator = address(0xA2);
-    address user1    = address(0xB1);
-    address user2    = address(0xB2);
-    address user3    = address(0xB3);
+    address admin     = address(0xA1);
+    address operator1 = address(0xA2);
+    address operator2 = address(0xA3);
+    address operator3 = address(0xA4);
+    address user1     = address(0xB1);
+    address user2     = address(0xB2);
+    address user3     = address(0xB3);
 
     address[] noAddrs;
 
@@ -39,17 +41,6 @@ contract IdentityNetworkDeployTest is DssTest {
         address network = IdentityNetworkDeploy.deploy(address(this), address(this));
         IdentityNetworkInit.init(network, buds, members, subnets);
         n = IdentityNetwork(network);
-    }
-
-    function _single(address a) internal pure returns (address[] memory arr) {
-        arr = new address[](1);
-        arr[0] = a;
-    }
-
-    function _pair(address a, address b) internal pure returns (address[] memory arr) {
-        arr = new address[](2);
-        arr[0] = a;
-        arr[1] = b;
     }
 
     function initExternal(
@@ -92,16 +83,26 @@ contract IdentityNetworkDeployTest is DssTest {
     function testInitNotAuthorized() public {
         address network = IdentityNetworkDeploy.deploy(address(this), admin);
 
+        address[] memory members = new address[](1);
+        members[0] = user1;
+
         vm.expectRevert("IdentityNetworkInit/not-authorized");
-        this.initExternal(network, noAddrs, _single(user1), noAddrs);
+        this.initExternal(network, noAddrs, members, noAddrs);
     }
 
     function testInitWithBuds() public {
-        IdentityNetwork n = _deployAndInit(_single(operator), noAddrs, noAddrs);
+        address[] memory operators = new address[](3);
+        operators[0] = operator1;
+        operators[1] = operator2;
+        operators[2] = operator3;
 
-        assertEq(n.buds(operator), 1);
+        IdentityNetwork n = _deployAndInit(operators, noAddrs, noAddrs);
 
-        vm.prank(operator);
+        assertEq(n.buds(operator1), 1);
+        assertEq(n.buds(operator2), 1);
+        assertEq(n.buds(operator3), 1);
+
+        vm.prank(operator1);
         n.addMember(user1);
         assertTrue(n.isMember(user1));
     }
@@ -125,9 +126,18 @@ contract IdentityNetworkDeployTest is DssTest {
         IdentityNetwork s1 = _deployAndInit(noAddrs, noAddrs, noAddrs);
         IdentityNetwork s2 = _deployAndInit(noAddrs, noAddrs, noAddrs);
 
-        IdentityNetwork n = _deployAndInit(_single(operator), _pair(user1, user2), _pair(address(s1), address(s2)));
+        address[] memory operators = new address[](1);
+        operators[0] = operator1;
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+        address[] memory subnets = new address[](2);
+        subnets[0] = address(s1);
+        subnets[1] = address(s2);
 
-        assertEq(n.buds(operator), 1);
+        IdentityNetwork n = _deployAndInit(operators, members, subnets);
+
+        assertEq(n.buds(operator1), 1);
         assertEq(n.directMemberCount(), 2);
         assertTrue(n.isMember(user1));
         assertTrue(n.isMember(user2));
@@ -137,14 +147,22 @@ contract IdentityNetworkDeployTest is DssTest {
     }
 
     function testInitExecutorAlreadyBud() public {
+        address[] memory operators = new address[](1);
+        operators[0] = address(this);
+
         // Executor listed as a bud keeps the role after init
-        IdentityNetwork n = _deployAndInit(_single(address(this)), noAddrs, noAddrs);
+        IdentityNetwork n = _deployAndInit(operators, noAddrs, noAddrs);
 
         assertEq(n.buds(address(this)), 1);
     }
 
     function testInitExecutorHasNoBudRole() public {
-        IdentityNetwork n = _deployAndInit(noAddrs, _single(user1), _single(address(0x1)));
+        address[] memory members = new address[](1);
+        members[0] = user1;
+        address[] memory subnets = new address[](1);
+        subnets[0] = address(0x1);
+
+        IdentityNetwork n = _deployAndInit(noAddrs, members, subnets);
 
         assertEq(n.buds(address(this)), 0);
     }

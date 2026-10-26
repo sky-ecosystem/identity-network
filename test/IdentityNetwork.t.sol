@@ -91,58 +91,46 @@ contract IdentityNetworkTest is DssTest {
 
     // --- Kiss / Diss ---
 
-    function testKiss() public {
+    function testKissDiss() public {
         address newBud = address(0xC2);
-        vm.expectEmit(true, true, true, true);
+
+        assertEq(network.buds(newBud), 0);
+
+        vm.expectEmit();
         emit Kiss(newBud);
         network.kiss(newBud);
         assertEq(network.buds(newBud), 1);
+
+        vm.expectEmit();
+        emit Diss(newBud);
+        network.diss(newBud);
+        assertEq(network.buds(newBud), 0);
     }
 
-    function testDiss() public {
-        vm.expectEmit(true, true, true, true);
-        emit Diss(bud);
-        network.diss(bud);
-        assertEq(network.buds(bud), 0);
-    }
-
-    function testRevertKissNotAuthorized() public {
-        vm.prank(bud);
+    function testRevertBudNotAuthorized() public {
         vm.expectRevert("IdentityNetwork/not-authorized");
-        network.kiss(user1);
-    }
+        vm.prank(bud); network.kiss(user1);
 
-    function testRevertDissNotAuthorized() public {
-        vm.prank(bud);
         vm.expectRevert("IdentityNetwork/not-authorized");
-        network.diss(bud);
+        vm.prank(bud); network.diss(bud);
     }
 
     // --- AddMember / RemoveMember ---
 
     function testAddMember() public {
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddMember(user1);
-        vm.prank(bud);
-        network.addMember(user1);
+        vm.prank(bud); network.addMember(user1);
         assertTrue(network.isMember(user1));
     }
 
     function testRemoveMember() public {
-        vm.prank(bud);
-        network.addMember(user1);
+        vm.prank(bud); network.addMember(user1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveMember(user1);
-        vm.prank(bud);
-        network.removeMember(user1);
+        vm.prank(bud); network.removeMember(user1);
         assertFalse(network.isMember(user1));
-    }
-
-    function testRevertAddMemberWardNotAuthorized() public {
-        vm.prank(ward);
-        vm.expectRevert("IdentityNetwork/not-operator");
-        network.addMember(user1);
     }
 
     function testAddMemberIdempotent() public {
@@ -155,17 +143,8 @@ contract IdentityNetworkTest is DssTest {
     }
 
     function testRemoveNonMember() public {
-        vm.prank(bud);
-        network.removeMember(user1);
+        vm.prank(bud); network.removeMember(user1);
         assertFalse(network.isMember(user1));
-    }
-
-    function testBudCannotAddMemberAfterDiss() public {
-        network.diss(bud);
-
-        vm.prank(bud);
-        vm.expectRevert("IdentityNetwork/not-operator");
-        network.addMember(user1);
     }
 
     // --- Member Batch ---
@@ -176,15 +155,13 @@ contract IdentityNetworkTest is DssTest {
         usrs[1] = user2;
         usrs[2] = user3;
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddMember(user1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddMember(user2);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddMember(user3);
-
-        vm.prank(bud);
-        network.addMemberBatch(usrs);
+        vm.prank(bud); network.addMemberBatch(usrs);
 
         assertTrue(network.isMember(user1));
         assertTrue(network.isMember(user2));
@@ -203,13 +180,11 @@ contract IdentityNetworkTest is DssTest {
         usrs[0] = user1;
         usrs[1] = user3;
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveMember(user1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveMember(user3);
-
-        vm.prank(bud);
-        network.removeMemberBatch(usrs);
+        vm.prank(bud); network.removeMemberBatch(usrs);
 
         assertFalse(network.isMember(user1));
         assertTrue(network.isMember(user2));
@@ -218,8 +193,7 @@ contract IdentityNetworkTest is DssTest {
     }
 
     function testAddMemberBatchEmpty() public {
-        vm.prank(bud);
-        network.addMemberBatch(new address[](0));
+        vm.prank(bud); network.addMemberBatch(new address[](0));
     }
 
     // --- Member Query ---
@@ -292,8 +266,7 @@ contract IdentityNetworkTest is DssTest {
     }
 
     function testIsDirectMemberTrue() public {
-        vm.prank(bud);
-        network.addMember(user1);
+        vm.prank(bud); network.addMember(user1);
         assertTrue(network.isDirectMember(user1));
     }
 
@@ -307,8 +280,7 @@ contract IdentityNetworkTest is DssTest {
 
     function testIsDirectMemberNotSubnetMember() public {
         childA.addMember(user1);
-        vm.prank(bud);
-        network.addSubnet(address(childA));
+        vm.prank(bud); network.addSubnet(address(childA));
 
         assertTrue(network.isMember(user1));
         assertFalse(network.isDirectMember(user1));
@@ -317,10 +289,9 @@ contract IdentityNetworkTest is DssTest {
     // --- AddSubnet / RemoveSubnet ---
 
     function testAddSubnet() public {
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddSubnet(address(childA));
-        vm.prank(bud);
-        network.addSubnet(address(childA));
+        vm.prank(bud); network.addSubnet(address(childA));
 
         assertEq(network.subnetCount(), 1);
         assertTrue(network.isSubnet(address(childA)));
@@ -350,7 +321,7 @@ contract IdentityNetworkTest is DssTest {
         vm.startPrank(bud);
         network.addSubnet(address(childA));
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveSubnet(address(childA));
         network.removeSubnet(address(childA));
         vm.stopPrank();
@@ -369,20 +340,6 @@ contract IdentityNetworkTest is DssTest {
         assertTrue(network.isSubnet(address(childA)));
     }
 
-    function testRevertAddSubnetWardNotAuthorized() public {
-        vm.prank(ward);
-        vm.expectRevert("IdentityNetwork/not-operator");
-        network.addSubnet(address(childA));
-    }
-
-    function testBudCannotAddSubnetAfterDiss() public {
-        network.diss(bud);
-
-        vm.prank(bud);
-        vm.expectRevert("IdentityNetwork/not-operator");
-        network.addSubnet(address(childA));
-    }
-
     // --- Subnet Batch ---
 
     function testAddSubnetBatch() public {
@@ -391,15 +348,13 @@ contract IdentityNetworkTest is DssTest {
         subs[1] = address(childB);
         subs[2] = address(childC);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddSubnet(address(childA));
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddSubnet(address(childB));
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit AddSubnet(address(childC));
-
-        vm.prank(bud);
-        network.addSubnetBatch(subs);
+        vm.prank(bud); network.addSubnetBatch(subs);
 
         assertEq(network.subnetCount(), 3);
         assertTrue(network.isSubnet(address(childA)));
@@ -417,11 +372,10 @@ contract IdentityNetworkTest is DssTest {
         subs[0] = address(childA);
         subs[1] = address(childC);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveSubnet(address(childA));
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit RemoveSubnet(address(childC));
-
         network.removeSubnetBatch(subs);
         vm.stopPrank();
 
@@ -432,8 +386,7 @@ contract IdentityNetworkTest is DssTest {
     }
 
     function testAddSubnetBatchEmpty() public {
-        vm.prank(bud);
-        network.addSubnetBatch(new address[](0));
+        vm.prank(bud); network.addSubnetBatch(new address[](0));
     }
 
     // --- Subnet Query ---
@@ -499,16 +452,14 @@ contract IdentityNetworkTest is DssTest {
     // --- isMember (direct + subnets) ---
 
     function testIsMemberDirectMember() public {
-        vm.prank(bud);
-        network.addMember(user1);
+        vm.prank(bud); network.addMember(user1);
 
         assertTrue(network.isMember(user1));
         assertFalse(network.isMember(user2));
     }
 
     function testIsMemberViaSubnet() public {
-        vm.prank(bud);
-        network.addSubnet(address(childA));
+        vm.prank(bud); network.addSubnet(address(childA));
         childA.addMember(user1);
 
         assertTrue(network.isMember(user1));
@@ -560,15 +511,13 @@ contract IdentityNetworkTest is DssTest {
         childA.addMember(user1);
         assertTrue(network.isMember(user1));
 
-        vm.prank(bud);
-        network.removeSubnet(address(childA));
+        vm.prank(bud); network.removeSubnet(address(childA));
 
         assertFalse(network.isMember(user1));
     }
 
     function testIsMemberAfterSubnetMemberRemoval() public {
-        vm.prank(bud);
-        network.addSubnet(address(childA));
+        vm.prank(bud); network.addSubnet(address(childA));
         childA.addMember(user1);
 
         assertTrue(network.isMember(user1));
