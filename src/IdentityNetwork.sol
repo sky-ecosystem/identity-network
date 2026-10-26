@@ -79,6 +79,7 @@ contract IdentityNetwork is IIdentityNetwork {
         emit AddMember(usr);
     }
 
+    // Warning: removing a direct member does not guarantee it loses membership, as it could still be included in a subnet.
     function removeMember(address usr) external toll {
         _directMembers.remove(usr);
         emit RemoveMember(usr);
