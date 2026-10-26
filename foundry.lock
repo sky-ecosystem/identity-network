@@ -1,0 +1,14 @@
+{
+  "lib/dss-test": {
+    "branch": {
+      "name": "master",
+      "rev": "6978eea94573fda10309b4751c9c7643e27248f6"
+    }
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.6.1",
+      "rev": "5fd1781b1454fd1ef8e722282f86f9293cacf256"
+    }
+  }
+}
