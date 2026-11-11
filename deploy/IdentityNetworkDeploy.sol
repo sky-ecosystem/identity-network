@@ -27,6 +27,7 @@ library IdentityNetworkDeploy {
 
         // Same behaviour as dss-test ScriptTools.switchOwner
         if (deployer != owner) {
+            require(IdentityNetwork(network).wards(deployer) == 1, "deployer-not-authed");
             IdentityNetwork(network).rely(owner);
             IdentityNetwork(network).deny(deployer);
         }

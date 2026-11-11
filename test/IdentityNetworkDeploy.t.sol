@@ -52,6 +52,10 @@ contract IdentityNetworkDeployTest is DssTest {
         IdentityNetworkInit.init(network, buds, members, subnets);
     }
 
+    function deployExternal(address deployer, address owner) external returns (address) {
+        return IdentityNetworkDeploy.deploy(deployer, owner);
+    }
+
     // --- Deploy ---
 
     function testDeploy() public {
@@ -68,6 +72,12 @@ contract IdentityNetworkDeployTest is DssTest {
         IdentityNetwork n = IdentityNetwork(IdentityNetworkDeploy.deploy(address(this), address(this)));
 
         assertEq(n.wards(address(this)), 1);
+    }
+
+    function testDeployDeployerNotAuthed() public {
+        // The network is created by this contract, so any other deployer is not a ward
+        vm.expectRevert("deployer-not-authed");
+        this.deployExternal(address(0xBAD), admin);
     }
 
     // --- Init ---
